@@ -33,7 +33,7 @@ sudo apt install libgmp-dev
 Para compilar o código, utilize o Makefile incluído no projeto. Ele irá compilar os arquivos-fonte automaticamente e gerar o executável. Para compilar o projeto, execute os seguintes comandos no diretório do projeto:
 
 ```bash
-make
+gcc elgamal.c -o elgamal -lgmp
 ```
 
 Este comando irá compilar todos os arquivos .c e gerar o executável chamado elgamal. Se tudo ocorrer corretamente, você verá o arquivo executável gerado na pasta raiz do projeto.
