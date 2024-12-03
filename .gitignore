@@ -1,0 +1,23 @@
+# Compilados e binários
+*.o
+*.out
+*.exe
+bin/
+
+# Arquivos de build e logs
+*.log
+*.aux
+*.dSYM/
+*.stackdump
+*.pyc
+
+# Diretórios do sistema
+.DS_Store
+Thumbs.db
+
+# Configurações do editor
+.vscode/
+*.code-workspace
+
+# Makefile outputs
+Makefile~
