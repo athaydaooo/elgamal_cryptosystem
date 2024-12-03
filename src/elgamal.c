@@ -1,43 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <gmp.h>
-#include <time.h>
-#include <stdbool.h>
-
-typedef struct {
-    mpz_t bigPrime; // Primo grande
-    mpz_t primitiveRoot; // Raiz primitiva de p
-    mpz_t key; // Chave pública
-} PublicKey;
-
-typedef struct {
-    mpz_t key; // Chave privada
-} PrivateKey;
-
-typedef struct {
-    PublicKey publicKey;
-    PrivateKey privateKey;
-} Keypair;
-
-typedef struct {
-    mpz_t firstCipher;
-    mpz_t secondCipher;
-} EncryptedMessage;
-
-
-void print_variable(const char *var_name, mpz_t value, bool extra_newline) {
-    printf("%s = ", var_name);
-    gmp_printf("%Zd", value); 
-
-    printf("\n");
-    
-    if (extra_newline) {
-        printf("\n");
-        printf("------------------------------------\n");
-        printf("\n");
-    }
-    
-}
+#include "elgamal.h"
 
 Keypair* generate_keys(int bits) {
     Keypair *keypair = (Keypair *)malloc(sizeof(Keypair));
@@ -120,35 +81,3 @@ void decrypt(mpz_t decryptedMessage, Keypair *keypair, const EncryptedMessage *e
     mpz_clears(cypher1Mod, cypher1ModInverse, NULL);
 }
 
-int main() {
-    // Gerar um par de chaves (tamanho de 512 bits)
-    Keypair *keypair = generate_keys(512);
-    printf("Chaves geradas com sucesso!\n\n");
-    print_variable("Primo Grande", keypair->publicKey.bigPrime, false);
-    print_variable("Raiz Primitiva", keypair->publicKey.primitiveRoot, false);
-    print_variable("Chave Pública", keypair->publicKey.key, false);
-    print_variable("Chave Privada", keypair->privateKey.key, true);
-
-    mpz_t originalMessage;
-    mpz_init_set_ui(originalMessage, 25565);
-    print_variable("Mensagem Original", originalMessage, true);
-
-    EncryptedMessage *encryptedMessage = (EncryptedMessage *)malloc(sizeof(EncryptedMessage));
-    mpz_inits(encryptedMessage->firstCipher, encryptedMessage->secondCipher, NULL);
-    encrypt(originalMessage, keypair, encryptedMessage);
-    printf("Mensagem Criptografada com sucesso!\n\n");
-    print_variable("Cipher 1", encryptedMessage->firstCipher, false);
-    print_variable("Cipher 2", encryptedMessage->secondCipher, true);
-    
-    mpz_t decryptedMessage;
-    mpz_init(decryptedMessage);
-    decrypt(decryptedMessage, keypair, encryptedMessage);
-    printf("Mensagem descriptografada com sucesso!\n\n");
-    print_variable("Mensagem descriptografada", decryptedMessage, true);
-    
-    // Liberar a memória alocada para keypair
-    free(keypair);
-    free(encryptedMessage);
-
-    return 0;
-}
