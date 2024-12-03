@@ -1,154 +1,89 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <gmp.h>
 #include <time.h>
-#include <stdbool.h>
+#include <string.h>
 
-typedef struct {
-    mpz_t bigPrime; // Primo grande
-    mpz_t primitiveRoot; // Raiz primitiva de p
-    mpz_t key; // Chave p√∫blica
-} PublicKey;
-
-typedef struct {
-    mpz_t key; // Chave privada
-} PrivateKey;
-
-typedef struct {
-    PublicKey publicKey;
-    PrivateKey privateKey;
-} Keypair;
-
-typedef struct {
-    mpz_t firstCipher;
-    mpz_t secondCipher;
-} EncryptedMessage;
-
-
-void print_variable(const char *var_name, mpz_t value, bool extra_newline) {
-    printf("%s = ", var_name);
-    gmp_printf("%Zd", value); 
-
-    printf("\n");
-    
-    if (extra_newline) {
-        printf("\n");
-        printf("------------------------------------\n");
-        printf("\n");
+///fazendo o calculo exponencial modular | (base^exp) % mod.
+long long int mod_exp(long long int base, long long int exp, long long int mod) {
+    long long int result = 1;
+    base = base % mod; ///melhorando a eficiencia do codigo ao usar numeros menores.
+    while (exp > 0) {
+        if (exp % 2 == 1) { ///se for Ìmpar multiplicados result por base e aplicamos o modulo.
+            result = (result * base) % mod;
+        }
+        exp = exp >> 1; ///Dividindo o exp pela metade.
+        base = (base * base) % mod; ///elevamos a base ao quadrado e aplicamos o modulo.
     }
-    
+    return result;
 }
 
-Keypair* generate_keys(int bits) {
-    Keypair *keypair = (Keypair *)malloc(sizeof(Keypair));
-
-    mpz_inits(keypair->publicKey.bigPrime, keypair->publicKey.primitiveRoot, keypair->publicKey.key,
-                keypair->privateKey.key, NULL);
-
-    //Inicializa gerador de numero aleat√≥rio
-    gmp_randstate_t state;
-    gmp_randinit_mt(state);
-    gmp_randseed_ui(state, time(NULL));
-    
-    //Inicializa numero aleat√≥rio
-    mpz_t randomNumber;
-    mpz_init(randomNumber);
-    
-    //Calcula proximo numero primo
-    mpz_urandomb(randomNumber, state, bits - 1);
-    mpz_nextprime(keypair->publicKey.bigPrime, randomNumber);
-    
-    //Gera a raiz primitiva r de p
-    mpz_urandomm(keypair->publicKey.primitiveRoot, state, keypair->publicKey.bigPrime);
-    
-    //Gera a chave privada x
-    mpz_urandomm(keypair->privateKey.key, state, keypair->publicKey.bigPrime);
-    
-    //Calcula a chave p√∫blica a = r^x mod p
-    mpz_powm(keypair->publicKey.key, keypair->publicKey.primitiveRoot, keypair->privateKey.key, keypair->publicKey.bigPrime);
-    
-    //Limpa variavel temporaria (optimizar memoria)
-    mpz_clear(randomNumber);
-
-    return keypair;
+///Gerando a chave publica e privada
+void gerar_chaves(long long int *p, long long int *r, long long int *x, long long int *a) {
+    srand(time(NULL)); ///iniciando o srand
+    *p = 997;    ///n˙mero primo grande
+    *r = 5;      ///raiz primitiva de p
+    *x = rand() % (*p - 1) + 1; ///chave privada
+    *a = mod_exp(*r, *x, *p);    ///chave p˙blica
 }
 
-void encrypt(mpz_t originalMessage, Keypair *keypair , EncryptedMessage *encryptedMessage) {
-    //Inicializa gerador de numero aleat√≥rio
-    gmp_randstate_t state;
-    gmp_randinit_mt(state);
-    gmp_randseed_ui(state, time(NULL));
-
-    // Inicializa vari√°veis
-    mpz_t randomKey, bigPrime;
-    mpz_inits(randomKey, bigPrime, NULL);
-    mpz_set(bigPrime, keypair->publicKey.bigPrime);
-    
-    // Gerar valor aleat√≥rio entre 1 e o primo grande
-    mpz_urandomm(randomKey, state, keypair->publicKey.bigPrime);
-    
-    //Calcula o firstBlock onde  c1 = r^k mod p
-    mpz_powm(encryptedMessage->firstCipher, keypair->publicKey.primitiveRoot, randomKey, bigPrime);
-    
-    //Calcula o segundo bloco onde c2 = m * (a^k mod p)
-    mpz_t ak;
-    mpz_init(ak);
-    mpz_powm(ak, keypair->publicKey.key, randomKey, bigPrime);
-    mpz_mul(encryptedMessage->secondCipher, originalMessage, ak);
-    mpz_mod(encryptedMessage->secondCipher, encryptedMessage->secondCipher, bigPrime);
-    
-    //Limpa Variaveis temporarias
-    mpz_clears(randomKey, ak, NULL);
+// FunÁ„o para criptografar um bloco da mensagem
+void criptografar(long long int p, long long int r, long long int a, long long int m, long long int *c1, long long int *c2) {
+    long long int k = rand() % (p - 1) + 1;  // Valor aleatÛrio
+    *c1 = mod_exp(r, k, p);                  // C1 = r^k mod p
+    *c2 = (m * mod_exp(a, k, p)) % p;        // C2 = m * a^k mod p
 }
 
-void decrypt(mpz_t decryptedMessage, Keypair *keypair, const EncryptedMessage *encryptedMessage) {
-    mpz_t bigPrime, cypher1Mod , cypher1ModInverse;
-    mpz_inits(bigPrime, cypher1Mod, cypher1ModInverse, NULL);
-    mpz_set(bigPrime, keypair->publicKey.bigPrime);
+// FunÁ„o para descriptografar um bloco da mensagem
+long long int descriptografar(long long int p, long long int x, long long int c1, long long int c2) {
+    long long int s = mod_exp(c1, x, p);     // s = c1^x mod p
+    long long int s_inv = mod_exp(s, p - 2, p); // inverso multiplicativo de s mod p
+    return (c2 * s_inv) % p;                 // mensagem original m = c2 * s_inv mod p
+}
 
-    // c1^x mod p
-    mpz_powm(cypher1Mod, encryptedMessage->firstCipher, keypair->privateKey.key, bigPrime);
+// FunÁ„o para criptografar a mensagem completa
+void criptografar_mensagem(char *mensagem, long long int p, long long int r, long long int a, long long int *c1_array, long long int *c2_array) {
+    for (int i = 0; i < strlen(mensagem); i++) {
+        long long int m = mensagem[i];
+        criptografar(p, r, a, m, &c1_array[i], &c2_array[i]);
+    }
+}
 
-    // (c1^x)^-1 mod p
-    mpz_invert(cypher1ModInverse, cypher1Mod, bigPrime);
-
-    // m = c2 * (c1^x)^-1 mod p
-    mpz_mul(decryptedMessage, encryptedMessage->secondCipher, cypher1ModInverse);
-    mpz_mod(decryptedMessage, decryptedMessage, bigPrime);
-
-    // Limpeza de vari√°veis tempor√°rias
-    mpz_clears(cypher1Mod, cypher1ModInverse, NULL);
+// FunÁ„o para descriptografar a mensagem completa
+void descriptografar_mensagem(long long int *c1_array, long long int *c2_array, int length, long long int p, long long int x, char *mensagem_decifrada) {
+    for (int i = 0; i < length; i++) {
+        long long int m = descriptografar(p, x, c1_array[i], c2_array[i]);
+        mensagem_decifrada[i] = (char)m;
+    }
+    mensagem_decifrada[length] = '\0';
 }
 
 int main() {
-    // Gerar um par de chaves (tamanho de 512 bits)
-    Keypair *keypair = generate_keys(512);
-    printf("Chaves geradas com sucesso!\n\n");
-    print_variable("Primo Grande", keypair->publicKey.bigPrime, false);
-    print_variable("Raiz Primitiva", keypair->publicKey.primitiveRoot, false);
-    print_variable("Chave P√∫blica", keypair->publicKey.key, false);
-    print_variable("Chave Privada", keypair->privateKey.key, true);
+    long long int p, r, x, a;                // p e r s„o par‚metros p˙blicos; x e a s„o a chave privada e p˙blica
+    char mensagem[256];
+    char mensagem_decifrada[256];
+    long long int c1_array[256], c2_array[256]; // Arrays para armazenar C1 e C2 de cada caractere
 
-    mpz_t originalMessage;
-    mpz_init_set_ui(originalMessage, 25565);
-    print_variable("Mensagem Original", originalMessage, true);
+    // GeraÁ„o das chaves
+    gerar_chaves(&p, &r, &x, &a);
+    printf("Chave p˙blica (p, r, a): (%lld, %lld, %lld)\n", p, r, a);
+    printf("Chave p ada x: %lld\n", x);
 
-    EncryptedMessage *encryptedMessage = (EncryptedMessage *)malloc(sizeof(EncryptedMessage));
-    mpz_inits(encryptedMessage->firstCipher, encryptedMessage->secondCipher, NULL);
-    encrypt(originalMessage, keypair, encryptedMessage);
-    printf("Mensagem Criptografada com sucesso!\n\n");
-    print_variable("Cipher 1", encryptedMessage->firstCipher, false);
-    print_variable("Cipher 2", encryptedMessage->secondCipher, true);
-    
-    mpz_t decryptedMessage;
-    mpz_init(decryptedMessage);
-    decrypt(decryptedMessage, keypair, encryptedMessage);
-    printf("Mensagem descriptografada com sucesso!\n\n");
-    print_variable("Mensagem descriptografada", decryptedMessage, true);
-    
-    // Liberar a mem√≥ria alocada para keypair
-    free(keypair);
-    free(encryptedMessage);
+    // Entrada da mensagem
+    printf("Digite a mensagem para criptografar: ");
+    fgets(mensagem, 256, stdin);
+    mensagem[strcspn(mensagem, "\n")] = 0; // Remove o caractere de nova linha
+
+    // Criptografia da mensagem completa
+    criptografar_mensagem(mensagem, p, r, a, c1_array, c2_array);
+    printf("Mensagem criptografada:\n");
+    for (int i = 0; i < strlen(mensagem); i++) {
+        printf("(C1 = %lld, C2 = %lld) ", c1_array[i], c2_array[i]);
+    }
+    printf("\n");
+
+    // Descriptografia da mensagem completa
+    descriptografar_mensagem(c1_array, c2_array, strlen(mensagem), p, x, mensagem_decifrada);
+    printf("Mensagem descriptografada: %s\n", mensagem_decifrada);
 
     return 0;
 }
