@@ -28,7 +28,7 @@ typedef struct {
     mpz_t secondCipher;
 } EncryptedMessage;
 
-void decryptdecrypt(mpz_t decryptedMessage, Keypair *keypair, const EncryptedMessage *encryptedMessage);
+void decrypt(mpz_t decryptedMessage, Keypair *keypair, const EncryptedMessage *encryptedMessage);
 void encrypt(mpz_t originalMessage, Keypair *keypair , EncryptedMessage *encryptedMessage);
 Keypair* generate_keys(int bits);
 
