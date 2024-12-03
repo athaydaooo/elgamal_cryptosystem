@@ -1,91 +1,80 @@
-ElGamal Cryptosystem in C
-Este programa implementa o Sistema de Criptografia ElGamal em C, um sistema de criptografia de chave pública baseado em problemas matemáticos difíceis, como o logaritmo discreto. O programa gera um par de chaves (pública e privada), criptografa e descriptografa mensagens usando o algoritmo ElGamal.
+# ElGamal Cryptosystem in C
 
-Funcionalidades
-Geração de Chaves: O sistema gera uma chave pública (p, r, a) e uma chave privada (x) usando números primos.
-Criptografia: Criptografa a mensagem caractere por caractere usando a chave pública.
-Descriptografia: Descriptografa a mensagem cifrada usando a chave privada.
-Exibição: Exibe a chave pública gerada e os blocos de mensagem criptografada.
-Como Funciona
-O processo de criptografia ElGamal envolve os seguintes passos:
+Este projeto implementa o **Sistema de Criptografia ElGamal** utilizando a linguagem C e a biblioteca **GMP** para manipulação de números grandes. O sistema de criptografia ElGamal é um algoritmo de chave pública baseado no problema do logaritmo discreto.
 
-Geração das Chaves:
-Uma chave pública é gerada a partir de um número primo grande p, uma raiz primitiva r, e uma chave pública a = r^x mod p, onde x é a chave privada.
-Criptografia:
-Para cada caractere da mensagem, a criptografia é realizada gerando um valor aleatório k, calculando dois blocos: C1 = r^k mod p e C2 = m _ a^k mod p, onde m é o valor numérico do caractere da mensagem.
-Descriptografia:
-A descriptografia é feita utilizando a chave privada x. O algoritmo recupera a mensagem original usando a fórmula: m = C2 _ (C1^x)^-1 mod p.
-Requisitos
-C Compiler (gcc, clang).
-Biblioteca GMP (GNU Multiple Precision Arithmetic Library) para manipulação de números grandes (se necessário).
-Como Compilar e Executar
+## Funcionalidades
 
-1. Instalar a biblioteca GMP
-   Se você ainda não tem a biblioteca GMP instalada, você pode instalá-la usando os seguintes comandos (para sistemas baseados em Debian/Ubuntu):
+- **Geração de Chaves**: O sistema gera um par de chaves pública e privada, usando um número primo grande `p`, uma raiz primitiva `r` e a chave pública `a = r^x mod p`, onde `x` é a chave privada.
+- **Criptografia**: O sistema criptografa uma mensagem com a chave pública gerada, produzindo dois valores `C1` e `C2` que representam a mensagem criptografada.
+- **Descriptografia**: O sistema descriptografa os valores `C1` e `C2` utilizando a chave privada `x` para recuperar a mensagem original.
+- **Exibição das Variáveis**: O programa exibe as chaves pública e privada, a mensagem original, a mensagem criptografada e a mensagem descriptografada.
 
-bash
-Copiar código
-sudo apt update
-sudo apt install libgmp-dev 2. Compilar o código
-Para compilar o código, use o comando gcc:
+### Arquivos principais
 
-bash
-Copiar código
-gcc -o elgamal elgamal.c -lgmp
-Aqui, o arquivo elgamal.c é o código-fonte da implementação e -lgmp especifica a biblioteca GMP.
+- **`include/elgamal.h`**: Contém as definições das estruturas e declarações das funções principais de criptografia e geração de chaves.
+- **`include/utils.h`**: Declara funções auxiliares, como a impressão de variáveis GMP.
+- **`src/elgamal.c`**: Implementa as funções principais de criptografia e geração de chaves.
+- **`src/utils.c`**: Implementa as funções auxiliares, como a função de impressão de variáveis GMP.
+- **`src/main.c`**: Contém a função principal que orquestra a geração de chaves, criptografia e descriptografia.
 
-3. Executar o Programa
-   Após a compilação, execute o programa com:
+## Como Compilar e Executar
 
-bash
-Copiar código
+### Compilando o Código
+
+Para compilar o código, utilize o Makefile incluído no projeto. Ele irá compilar os arquivos-fonte automaticamente e gerar o executável. Para compilar o projeto, execute os seguintes comandos no diretório do projeto:
+
+```bash
+gcc elgamal.c -o elgamal -lgmp
+```
+
+Este comando irá compilar todos os arquivos .c e gerar o executável chamado elgamal. Se tudo ocorrer corretamente, você verá o arquivo executável gerado na pasta raiz do projeto.
+
+Executando o Programa
+Após a compilação, execute o programa com o seguinte comando:
+
+```bash
 ./elgamal
-O programa solicitará que você digite uma mensagem para criptografar, exibirá a chave pública gerada e, em seguida, mostrará a mensagem criptografada e sua versão descriptografada.
+```
 
-Estrutura do Código
-O código está dividido da seguinte maneira:
+Isso irá rodar o programa que gerará as chaves, criptografará a mensagem inserida, e depois descriptografará a mensagem, exibindo todos os resultados no terminal.
 
-1. Função mod_exp:
-   Realiza a exponenciação modular, ou seja, calcula (base^exp) % mod de forma eficiente.
-2. Função gerar_chaves:
-   Gera a chave pública e privada, escolhendo um número primo p, uma raiz primitiva r, e a chave privada x aleatoriamente.
-   A chave pública é calculada como a = r^x mod p.
-3. Funções criptografar e descriptografar:
-   A função criptografar cifra a mensagem usando a chave pública.
-   A função descriptografar recupera a mensagem original utilizando a chave privada.
-4. Funções para criptografar e descriptografar a mensagem inteira:
-   criptografar_mensagem: Criptografa uma mensagem completa caractere por caractere.
-   descriptografar_mensagem: Descriptografa uma mensagem completa e reconstrói a mensagem original.
-5. Função main:
-   O ponto de entrada do programa. Solicita a entrada da mensagem, gera as chaves, criptografa e descriptografa a mensagem e exibe os resultados.
-   Exemplo de Execução
-   Saída Esperada:
-   Entrada:
+### Exemplo de Execução
 
-bash
-Copiar código
-Digite a mensagem para criptografar: Teste
-Saída:
+Quando você executar o programa, ele solicitará uma mensagem para ser criptografada. Aqui está um exemplo de execução:
 
-bash
-Copiar código
-Chave pública (p, r, a): (997, 5, 258)
-Chave privada x: 564
+```bash
+Chave p�blica (p, r, a): (997, 5, 648)
+Chave p ada x: 147
+Digite a mensagem para criptografar: 123
 Mensagem criptografada:
-(C1 = 896, C2 = 350) (C1 = 698, C2 = 249) (C1 = 158, C2 = 529) (C1 = 322, C2 = 202)
-Mensagem descriptografada: Teste
-Descrição dos Campos:
-Chave pública: (p, r, a) são os parâmetros públicos usados para a criptografia.
-Chave privada: x é a chave privada usada para a descriptografia.
-Mensagem criptografada: Cada caractere é transformado em dois números, (C1, C2).
-Mensagem descriptografada: A mensagem original é restaurada após a descriptografia.
-Limitações e Considerações
-Tamanho do número primo: O exemplo usa p = 997 (um número primo pequeno). Para uso em produção ou aplicações reais, é recomendado usar números primos muito maiores (geralmente centenas de dígitos).
-Segurança: A segurança do ElGamal depende da dificuldade do problema do logaritmo discreto. Para garantir a segurança, os parâmetros devem ser escolhidos corretamente.
-Tamanho da mensagem: A função usa o valor ASCII de cada caractere, o que significa que o tamanho da mensagem está limitado a caracteres que podem ser representados por um valor long long int.
-Contribuindo
-Fork o repositório.
-Crie um branch (git checkout -b feature-xyz).
-Faça suas mudanças e commit (git commit -am 'Add new feature').
-Envie para o branch (git push origin feature-xyz).
-Abra um pull request.
+(C1 = 772, C2 = 57) (C1 = 36, C2 = 461) (C1 = 415, C2 = 451)
+Mensagem descriptografada: 123
+```
+
+### Descrição das Saídas
+
+- Primo Grande: O número primo p gerado para o sistema.
+- Raiz Primitiva: A raiz primitiva r gerada para o sistema.
+- Chave Pública: A chave pública a = r^x mod p.
+- Chave Privada: A chave privada x.
+- Mensagem Original: A mensagem original a ser criptografada (exibida como um número inteiro).
+- Cipher 1 e Cipher 2: Os dois blocos da mensagem criptografada.
+- Mensagem Descriptografada: A mensagem original recuperada após a descriptografia.
+
+## Limitações e Melhorias Futuras
+
+- Tamanho do número primo: O exemplo usa p = 997 (um número primo pequeno). Para uso em produção ou aplicações reais, é recomendado usar números primos muito maiores (geralmente centenas de dígitos).
+- Segurança: A segurança do ElGamal depende da dificuldade do problema do logaritmo discreto. Para garantir a segurança, os parâmetros devem ser escolhidos corretamente.
+- Tamanho da mensagem: A função usa o valor ASCII de cada caractere, o que significa que o tamanho da mensagem está limitado a caracteres que podem ser representados por um valor long long int.
+
+## Se você deseja contribuir para o projeto, siga os passos abaixo:
+
+- Faça um fork deste repositório.
+- Crie um branch para a sua feature (git checkout -b feature-xyz).
+- Faça as suas modificações e commit (git commit -am 'Add new feature').
+- Envie o branch (git push origin feature-xyz).
+- Abra um pull request para discutir as modificações.
+
+# Licença
+
+Este projeto está licenciado sob a Licença MIT. Veja o arquivo LICENSE para mais detalhes.
